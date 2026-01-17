@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Book, Download, Eye, ArrowLeft, Loader2, Lock, Search } from 'lucide-react';
+import { Book, Download, Eye, ArrowLeft, Loader2, Lock, Search ,Zap} from 'lucide-react';
 import Link from 'next/link';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
