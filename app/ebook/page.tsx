@@ -2,180 +2,152 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Book, Lock, Unlock, Zap, ShoppingCart, Loader2, ShieldCheck, ExternalLink } from 'lucide-react';
-import { toast, Toaster } from 'react-hot-toast';
+import { Book, Download, Eye, ArrowLeft, Loader2, Lock, Search } from 'lucide-react';
 import Link from 'next/link';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-export default function EbookStore() {
-  const [books, setBooks] = useState<any[]>([]);
+export default function EBookVaultPage() {
+  const [ebooks, setEbooks] = useState<any[]>([]);
   const [unlockedIds, setUnlockedIds] = useState<string[]>([]);
-  const [userCredits, setUserCredits] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const loadStoreData = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  useEffect(() => {
+    const fetchEBooks = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // ดึงรายชื่อ E-Book ทั้งหมด
+        const { data: allBooks } = await supabase.from('ebooks').select('*');
+        
+        // ดึงรายการที่ User ปลดล็อกแล้ว
+        if (user) {
+          const { data: unlocked } = await supabase
+            .from('unlocked_ebooks')
+            .select('ebook_id')
+            .eq('user_id', user.id);
+          
+          if (unlocked) setUnlockedIds(unlocked.map(i => i.ebook_id));
+        }
 
-      // ดึงข้อมูลหนังสือ, เครดิตผู้ใช้ และรายการที่ปลดล็อกแล้ว
-      const [booksRes, profileRes, unlockedRes] = await Promise.all([
-        supabase.from('ebooks').select('*').order('created_at', { ascending: false }),
-        supabase.from('profiles').select('credits').eq('id', user.id).single(),
-        supabase.from('unlocked_ebooks').select('ebook_id').eq('user_id', user.id)
-      ]);
-
-      if (booksRes.data) setBooks(booksRes.data);
-      if (profileRes.data) setUserCredits(profileRes.data.credits);
-      if (unlockedRes.data) setUnlockedIds(unlockedRes.data.map(i => i.ebook_id));
-    } catch (error) {
-      console.error('Error loading store:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { loadStoreData(); }, []);
-
-  const handlePurchase = async (book: any) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return toast.error('IDENTIFICATION REQUIRED');
-
-    const loadingToast = toast.loading('PROCESSING NEURAL TRANSACTION...');
-
-    try {
-      // 1. เรียกใช้ RPC ตัดแต้ม XP จริง
-      const { error: txError } = await supabase.rpc('deduct_xp_for_purchase', {
-        user_id_input: user.id,
-        amount_to_deduct: book.price
-      });
-
-      if (txError) {
-        toast.dismiss(loadingToast);
-        return toast.error(txError.message);
+        setEbooks(allBooks || []);
+      } catch (error) {
+        console.error("E-Book Vault Error:", error);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // 2. บันทึกการปลดล็อก
-      const { error: unlockError } = await supabase
-        .from('unlocked_ebooks')
-        .insert({ user_id: user.id, ebook_id: book.id });
+    fetchEBooks();
+  }, []);
 
-      if (unlockError) throw unlockError;
-
-      toast.dismiss(loadingToast);
-      toast.success(`ASSET SECURED: ${book.title}`);
-      loadStoreData(); 
-    } catch (error: any) {
-      toast.dismiss(loadingToast);
-      toast.error('TRANSACTION FAILED');
-    }
-  };
+  const filteredBooks = ebooks.filter(book => 
+    book.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) return (
     <div className="min-h-screen bg-[#050508] flex flex-col items-center justify-center gap-4">
-      <Loader2 className="text-cyan-500 animate-spin" size={40} />
-      <p className="text-cyan-500 font-black uppercase tracking-[0.3em] text-[10px]">Syncing Knowledge Vault...</p>
+      <Loader2 className="text-cyan-500 animate-spin" size={32} />
+      <div className="text-cyan-500 font-black tracking-[0.3em] text-[10px] uppercase">Accessing Knowledge Vault...</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white p-8 md:p-16 lg:ml-64 transition-all">
-      <Toaster position="bottom-right" />
-      
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8 border-b border-white/5 pb-12">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <ShieldCheck className="text-cyan-500" size={18} />
-              <span className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.4em]">Aurelius Digital Assets</span>
-            </div>
-            <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter">
-              Knowledge <span className="text-cyan-500">Vault</span>
-            </h1>
-          </div>
+    <div className="min-h-screen bg-[#050508] text-white p-8 md:p-12">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Navigation & Search */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-16">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors group">
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-widest">Back to Neural Link</span>
+          </Link>
           
-          <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] min-w-[200px] backdrop-blur-xl">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Your Neural Power</p>
-            <p className="text-3xl font-black italic text-cyan-500 flex items-center gap-2">
-              <Zap size={20} fill="currentColor" />
-              {userCredits.toLocaleString()} <span className="text-xs text-white/50 font-normal">XP</span>
-            </p>
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-500 transition-colors" size={18} />
+            <input 
+              type="text"
+              placeholder="SEARCH ASSETS..."
+              className="bg-white/5 border border-white/10 rounded-full py-3 pl-12 pr-6 text-xs font-bold tracking-widest focus:outline-none focus:border-cyan-500/50 w-full md:w-80 transition-all"
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
 
-        {/* Books Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {books.map((book) => {
+        {/* Header */}
+        <header className="mb-16">
+          <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none mb-4">
+            Knowledge <span className="text-cyan-500">Vault</span>
+          </h1>
+          <div className="flex items-center gap-4">
+            <div className="h-[1px] w-12 bg-cyan-500"></div>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.5em]">Intellectual Assets • Aurelius Studio</p>
+          </div>
+        </header>
+
+        {/* E-Book Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {filteredBooks.map((book) => {
             const isUnlocked = unlockedIds.includes(book.id);
+            
             return (
-              <div key={book.id} className="group relative flex flex-col bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-6 hover:border-cyan-500/50 transition-all duration-500 shadow-2xl">
-                
-                {/* Book Cover */}
-                <div className="relative aspect-[3/4] mb-8 rounded-2xl overflow-hidden border border-white/5 shadow-inner bg-black/40">
+              <div key={book.id} className="group relative">
+                {/* Book Cover Container */}
+                <div className="aspect-[3/4] rounded-3xl overflow-hidden bg-white/5 border border-white/10 mb-4 relative transition-transform duration-500 group-hover:-translate-y-2 shadow-2xl">
                   <img 
-                    src={book.cover_url || 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=500'} 
-                    className={`w-full h-full object-cover transition-all duration-700 ${!isUnlocked ? 'grayscale blur-[2px] opacity-40' : 'group-hover:scale-110 opacity-80'}`} 
+                    src={book.cover_url} 
+                    className={`w-full h-full object-cover transition-all duration-700 ${isUnlocked ? 'grayscale-0' : 'grayscale group-hover:grayscale-0 opacity-40'}`}
+                    alt={book.title}
                   />
+                  
+                  {/* Overlay for Locked Items */}
                   {!isUnlocked && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="p-4 bg-black/60 backdrop-blur-md rounded-full border border-white/10">
-                        <Lock className="text-white/40" size={32} />
-                      </div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm opacity-100 group-hover:opacity-0 transition-opacity duration-500">
+                      <Lock className="text-white/20 mb-2" size={32} />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Locked Asset</span>
                     </div>
                   )}
+
+                  {/* Action Buttons on Hover */}
+                  <div className="absolute inset-x-0 bottom-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-500 bg-gradient-to-t from-black to-transparent">
+                    {isUnlocked ? (
+                      <Link 
+                        href={`/ebook/read/${book.id}`}
+                        className="w-full bg-cyan-500 text-black font-black uppercase italic py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white transition-colors text-sm"
+                      >
+                        <Eye size={18} /> Read Asset
+                      </Link>
+                    ) : (
+                      <Link 
+                        href={`/recharge`}
+                        className="w-full bg-white text-black font-black uppercase italic py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-cyan-500 transition-colors text-sm"
+                      >
+                        <Zap className="fill-current" size={18} /> Unlock with XP
+                      </Link>
+                    )}
+                  </div>
                 </div>
 
-                {/* Details */}
-                <div className="flex-grow">
-                  <h3 className="text-2xl font-black uppercase italic mb-3 tracking-tight group-hover:text-cyan-500 transition-colors">
-                    {book.title}
-                  </h3>
-                  <p className="text-slate-500 text-[11px] font-bold uppercase leading-relaxed mb-8 line-clamp-3">
-                    {book.description}
-                  </p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-3">
-                  {isUnlocked ? (
-                    <Link 
-                      href={`/ebook/read/${book.id}`}
-                      className="w-full bg-cyan-500/10 text-cyan-500 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-3 border border-cyan-500/20 hover:bg-cyan-500 hover:text-black transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.1)]"
-                    >
-                      <Unlock size={16} /> Open Knowledge Asset
-                    </Link>
-                  ) : (
-                    <button 
-                      onClick={() => handlePurchase(book)}
-                      className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-cyan-500 transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(255,255,255,0.05)]"
-                    >
-                      <Zap size={16} fill="currentColor" /> Unlock for {book.price} XP
-                    </button>
-                  )}
-
-                  {/* Affiliate Link Button - ปรากฏเฉพาะเมื่อมีลิงก์เท่านั้น */}
-                  {book.affiliate_url && (
-                    <a 
-                      href={book.affiliate_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="w-full bg-white/[0.03] border border-white/5 text-slate-500 py-4 rounded-2xl font-black uppercase tracking-[0.15em] text-[9px] flex items-center justify-center gap-2 hover:bg-white/10 hover:text-white transition-all group/aff shadow-sm"
-                    >
-                      <ShoppingCart size={14} className="group-hover/aff:text-cyan-500" /> 
-                      Get Physical Copy
-                    </a>
-                  )}
+                {/* Book Info */}
+                <div className="px-2">
+                  <h3 className="font-black uppercase italic text-lg leading-tight group-hover:text-cyan-500 transition-colors line-clamp-1">{book.title}</h3>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
+                      {isUnlocked ? 'Access Granted' : 'Requires Authorization'}
+                    </p>
+                    <Book className={isUnlocked ? 'text-cyan-500' : 'text-slate-800'} size={14} />
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
-        
+
+        {/* Footer */}
         <footer className="mt-24 pt-8 border-t border-white/5 text-center">
           <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-700 italic">
-            By komsin intelligence • Official Affiliate Partner
+            Aurelius Studio Intelligence • Developed By komsin
           </p>
         </footer>
       </div>

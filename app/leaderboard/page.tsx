@@ -2,117 +2,125 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Trophy, Medal, Crown, ArrowLeft, Zap, User } from 'lucide-react';
+import { Trophy, Medal, Star, ArrowLeft, Loader2, Crown } from 'lucide-react';
 import Link from 'next/link';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 export default function LeaderboardPage() {
-  const [topUsers, setTopUsers] = useState<any[]>([]);
+  const [leaders, setLeaders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
-      // ดึงข้อมูล 10 อันดับแรกที่มี credits (XP) สูงสุด
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, credits')
-        .order('credits', { ascending: false })
-        .limit(10);
+    const fetchLeaders = async () => {
+      try {
+        // ดึงข้อมูล 10 อันดับแรกที่คะแนน XP เยอะที่สุด
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, display_name, credits, avatar_url')
+          .order('credits', { ascending: false })
+          .limit(10);
 
-      if (data) setTopUsers(data);
-      setLoading(false);
+        if (error) throw error;
+        setLeaders(data || []);
+      } catch (error) {
+        console.error("Leaderboard Fetch Error:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchLeaderboard();
+
+    fetchLeaders();
   }, []);
 
-  // ฟังก์ชันแสดงไอคอนตามลำดับ
-  const getRankIcon = (index: number) => {
-    if (index === 0) return <Crown className="text-yellow-400 fill-yellow-400" size={24} />;
-    if (index === 1) return <Medal className="text-slate-300 fill-slate-300" size={24} />;
-    if (index === 2) return <Medal className="text-amber-600 fill-amber-600" size={24} />;
-    return <span className="text-slate-500 font-black italic">{index + 1}</span>;
-  };
-
   if (loading) return (
-    <div className="min-h-screen bg-[#050508] flex items-center justify-center">
-      <div className="text-cyan-500 font-black uppercase tracking-[0.4em] animate-pulse">Syncing Leaderboard...</div>
+    <div className="min-h-screen bg-[#050508] flex flex-col items-center justify-center gap-4">
+      <Loader2 className="text-yellow-500 animate-spin" size={32} />
+      <div className="text-yellow-500 font-black tracking-[0.3em] text-[10px] uppercase">Ranking Intelligence...</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white p-6 md:p-12 relative overflow-hidden">
-      {/* Glow Effect */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-cyan-500/5 blur-[150px] rounded-full -z-10"></div>
-
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-[#050508] text-white p-8 md:p-12">
+      <div className="max-w-4xl mx-auto">
+        
         {/* Navigation */}
-        <Link href="/dashboard" className="inline-flex items-center gap-3 text-slate-500 hover:text-cyan-500 mb-12 transition-all font-black text-[10px] uppercase tracking-widest group">
-          <div className="p-2 bg-white/5 rounded-full group-hover:bg-cyan-500/10 transition-colors">
-            <ArrowLeft size={16} />
-          </div>
-          Back to Dashboard
+        <Link href="/dashboard" className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors mb-12 group">
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="text-[10px] font-black uppercase tracking-widest">Back to Neural Link</span>
         </Link>
 
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full mb-6">
-            <Trophy className="text-cyan-500" size={16} />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400">Elite Citizens Rankings</span>
-          </div>
-          <h1 className="text-6xl font-black italic uppercase tracking-tighter italic">
-            Top <span className="text-cyan-500 underline decoration-white/10 underline-offset-8">Leaders</span>
-          </h1>
-        </div>
-
-        {/* Leaderboard List */}
-        <div className="space-y-4">
-          {topUsers.map((user, index) => (
-            <div 
-              key={user.id}
-              className={`group flex items-center gap-6 p-6 rounded-[2.5rem] border transition-all duration-500 ${
-                index === 0 
-                ? 'bg-gradient-to-r from-cyan-500/20 to-transparent border-cyan-500/30' 
-                : 'bg-white/5 border-white/10 hover:border-white/20'
-              }`}
-            >
-              {/* Rank Icon */}
-              <div className="w-12 h-12 flex items-center justify-center">
-                {getRankIcon(index)}
-              </div>
-
-              {/* Citizen Identity */}
-              <div className="flex-1 flex items-center gap-5">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                  <User size={18} className="text-slate-500" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Citizen ID</p>
-                  <p className="text-lg font-black italic uppercase text-white tracking-tight">
-                    #{user.id.slice(0, 8).toUpperCase()}
-                  </p>
-                </div>
-              </div>
-
-              {/* XP Score */}
-              <div className="text-right">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Neural Power</p>
-                <div className="flex items-center gap-2 justify-end text-xl font-black italic text-cyan-500">
-                  <Zap size={18} className="fill-cyan-500" />
-                  {user.credits?.toLocaleString()} <span className="text-xs text-slate-600 not-italic ml-1">XP</span>
-                </div>
-              </div>
+        <header className="mb-16 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <Trophy className="text-yellow-500" size={64} />
+              <Crown className="absolute -top-4 -right-4 text-yellow-500 animate-bounce" size={32} />
             </div>
-          ))}
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-4">
+            Global <span className="text-yellow-500">Leaderboard</span>
+          </h1>
+          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.5em]">Top Authorized Citizens • Aurelius Studio</p>
+        </header>
+
+        {/* Rankings List */}
+        <div className="space-y-4">
+          {leaders.map((user, index) => {
+            const isTop3 = index < 3;
+            const rankColors = [
+              'border-yellow-500/50 bg-yellow-500/5', // Gold
+              'border-slate-300/30 bg-slate-300/5',  // Silver
+              'border-orange-500/30 bg-orange-500/5' // Bronze
+            ];
+
+            return (
+              <div 
+                key={user.id}
+                className={`flex items-center gap-6 p-6 rounded-[2rem] border transition-all ${
+                  isTop3 ? rankColors[index] : 'border-white/5 bg-white/[0.02] hover:bg-white/5'
+                }`}
+              >
+                {/* Rank Number */}
+                <div className="w-12 h-12 flex items-center justify-center font-black italic text-2xl">
+                  {index === 0 ? <Medal className="text-yellow-500" size={32} /> : index + 1}
+                </div>
+
+                {/* Avatar */}
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-white/10 border-2 border-white/5">
+                  <img 
+                    src={user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.display_name}`} 
+                    alt={user.display_name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Name & Title */}
+                <div className="flex-grow">
+                  <h3 className="font-black uppercase italic text-lg leading-none mb-1">
+                    {user.display_name || 'Unknown Citizen'}
+                    {index === 0 && <span className="ml-2 text-[10px] bg-yellow-500 text-black px-2 py-0.5 rounded-full not-italic">Elite</span>}
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Status: Authorized Citizen</p>
+                </div>
+
+                {/* Score */}
+                <div className="text-right">
+                  <div className="flex items-center gap-2 justify-end text-yellow-500 mb-1">
+                    <Star size={14} fill="currentColor" />
+                    <span className="font-black italic text-xl">{(user.credits || 0).toLocaleString()}</span>
+                  </div>
+                  <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Intelligence XP</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Footer */}
-        <footer className="text-center mt-20 opacity-30">
-          <p className="text-[9px] font-black tracking-[0.8em] text-slate-500 uppercase italic">
-            By Komsin Intelligence • Aurelius Ranking Engine
+        <footer className="mt-20 pt-8 border-t border-white/5 text-center">
+          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-700 italic">
+            AureliusX Intelligence Network • Developed By komsin
           </p>
         </footer>
       </div>
