@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
+  children, 
 }: {
   children: React.ReactNode;
 }) {
@@ -21,7 +21,7 @@ export default function RootLayout({
         {/* ส่วนเนื้อหาของหน้าเว็บ */}
         {children}
 
-        {/* 2. ตัวรับสัญญาณแจ้งเตือน (Toaster) 
+        {/* 2.  ตัวรับสัญญาณแจ้งเตือน (Toaster) 
             ผมตั้งค่าดีไซน์ให้เข้ากับ AureliusX v2 (ขอบมน, ตัวหนังสือหนา, โทน Dark) */}
         <Toaster 
           position="bottom-right" 
