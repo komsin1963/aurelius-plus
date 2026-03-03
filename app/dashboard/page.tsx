@@ -1,169 +1,187 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { BookOpen, PlayCircle, Zap, ShieldCheck, ArrowUpRight, Loader2, Star } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Zap, 
+  LogOut, 
+  Shield, 
+  ChevronRight,
+  Loader2,
+  Cpu,
+  Activity
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-export default function UserDashboard() {
-  const router = useRouter();
+export default function DashboardPage() {
+  const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [unlockedEbooks, setUnlockedEbooks] = useState<any[]>([]);
-  const [unlockedVideos, setUnlockedVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        // ถ้าไม่มี User ให้ส่งไปหน้า Login
-        if (!user) {
-          router.push('/login');
-          return;
-        }
+    const fetchUserData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { router.push('/login'); return; }
+      setUser(session.user);
 
-        const [profileRes, ebooksRes, videosRes] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
-          supabase.from('unlocked_ebooks').select('*, ebooks(*)').eq('user_id', user.id).limit(3),
-          supabase.from('unlocked_videos').select('*, videos(*)').eq('user_id', user.id).limit(3)
-        ]);
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
 
-        if (profileRes.data) setProfile(profileRes.data);
-        
-        // กรองข้อมูลและป้องกันการพังหาก Table ยังไม่มีข้อมูล
-        if (ebooksRes.data) setUnlockedEbooks(ebooksRes.data.map(i => i.ebooks).filter(Boolean));
-        if (videosRes.data) setUnlockedVideos(videosRes.data.map(i => i.videos).filter(Boolean));
-        
-      } catch (error) {
-        console.error("Dashboard Load Error:", error);
-      } finally {
-        setLoading(false);
-      }
+      setProfile(profileData);
+      setLoading(false);
     };
-
-    fetchDashboardData();
+    fetchUserData();
   }, [router]);
 
-  if (loading) return (
-    <div className="min-h-screen bg-[#050508] flex flex-col items-center justify-center gap-4">
-      <Loader2 className="text-cyan-500 animate-spin" size={32} />
-      <div className="text-cyan-500 font-black tracking-[0.3em] text-[10px] uppercase">Syncing Neural Link...</div>
-    </div>
-  );
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#020205] flex items-center justify-center">
+        <Loader2 className="animate-spin text-cyan-500" size={40} />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white p-8 md:p-12">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#020205] text-white font-sans selection:bg-cyan-500/30 overflow-x-hidden">
+      
+      {/* --- 🚀 Ultra-Slim Glass Sidebar (แก้ปัญหาบังจอ) --- */}
+      <aside className="fixed left-6 top-1/2 -translate-y-1/2 w-16 md:w-20 h-[60vh] bg-white/[0.02] border border-white/[0.08] backdrop-blur-3xl rounded-[3rem] flex flex-col items-center py-8 z-50 transition-all duration-500 hover:w-24 hover:bg-white/[0.05] group shadow-[0_0_50px_rgba(0,0,0,0.5)]">
         
-        {/* Header - Welcome back */}
-        <header className="mb-12">
-          <div className="flex items-center gap-3 mb-4">
-            <ShieldCheck className="text-cyan-500" size={18} />
-            <span className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.4em]">AureliusX Intelligence Status: Authorized</span>
+        <div className="mb-10">
+          <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)] group-hover:scale-110 transition-transform">
+            <Cpu size={20} className="text-black" />
           </div>
-          <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">
-            Welcome, <span className="text-cyan-500">{profile?.display_name || 'Citizen'}</span>
-          </h1>
+        </div>
+        
+        <nav className="flex-1 space-y-6 flex flex-col items-center w-full px-2">
+          <Link href="/dashboard" className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 group/icon transition-all relative">
+            <LayoutDashboard size={20} />
+            <span className="absolute left-full ml-4 px-2 py-1 bg-cyan-500 text-black text-[10px] font-black rounded opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none uppercase italic">Overview</span>
+          </Link>
+          <Link href="/redeem" className="p-3 rounded-2xl text-zinc-600 hover:text-white hover:bg-white/5 transition-all group/icon relative">
+            <Zap size={20} />
+            <span className="absolute left-full ml-4 px-2 py-1 bg-white text-black text-[10px] font-black rounded opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none uppercase italic">Redeem</span>
+          </Link>
+        </nav>
+
+        <button onClick={handleLogout} className="p-3 rounded-2xl text-zinc-700 hover:text-rose-500 hover:bg-rose-500/5 transition-all group/icon relative">
+          <LogOut size={20} />
+          <span className="absolute left-full ml-4 px-2 py-1 bg-rose-500 text-white text-[10px] font-black rounded opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none uppercase italic">Eject</span>
+        </button>
+      </aside>
+
+      {/* --- 🌊 Main Content (ขยับระยะขอบใหม่ให้อ่านง่ายขึ้น) --- */}
+      <main className="pl-28 md:pl-40 lg:pl-52 min-h-screen p-8 md:p-12 lg:p-20 relative">
+        
+        {/* Background Ambient Glow */}
+        <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-cyan-500/10 blur-[150px] rounded-full -z-10 animate-pulse"></div>
+        
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-24 gap-10">
+          <div>
+            <div className="flex items-center gap-3 mb-4 opacity-70">
+              <Activity size={14} className="text-cyan-500" />
+              <p className="text-[10px] font-black text-cyan-500 tracking-[0.5em] uppercase">Core Interface v2.5</p>
+            </div>
+            <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none uppercase">
+              NEURAL<span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10">LINK</span>
+            </h1>
+          </div>
+          
+          <div className="flex items-center gap-6 bg-white/[0.02] border border-white/[0.05] p-3 pr-10 rounded-full backdrop-blur-xl hover:bg-white/[0.05] transition-all cursor-default group">
+             <div className="w-14 h-14 bg-gradient-to-br from-zinc-800 to-black rounded-full border border-white/10 flex items-center justify-center font-black text-xl text-cyan-500 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
+               {profile?.full_name?.charAt(0) || 'K'}
+             </div>
+             <div>
+               <p className="text-[9px] font-black text-zinc-500 tracking-widest uppercase mb-1">Authenticated</p>
+               <p className="text-lg font-black italic tracking-tight">{profile?.full_name || 'Komsin Studio'}</p>
+             </div>
+          </div>
         </header>
 
-        {/* 7 ปุ่มหลัก/Stats Grid (ปรับปรุงให้รองรับปุ่มใหม่ๆ) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {/* Creative Hub Stats */}
-          <Link href="/studio5" className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] flex flex-col justify-between group hover:border-cyan-500/50 transition-all shadow-xl">
-            <Zap className="text-cyan-500 mb-4 transition-transform group-hover:scale-110" size={32} fill="currentColor" />
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Available Power</p>
-              <p className="text-4xl font-black italic">{(profile?.credits || 0).toLocaleString()} <span className="text-sm opacity-50">XP</span></p>
-            </div>
-          </Link>
-          
-          {/* Leaderboard Link */}
-          <Link href="/leaderboard" className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] flex flex-col justify-between group hover:border-yellow-500/50 transition-all shadow-xl">
-            <Star className="text-yellow-500 mb-4 transition-transform group-hover:scale-110" size={32} />
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Global Ranking</p>
-              <p className="text-4xl font-black italic">#{(profile?.rank || '??')}</p>
-            </div>
-          </Link>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
+          {/* XP Main Card */}
+          <div className="xl:col-span-2 relative group">
+            <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/50 to-blue-600/50 rounded-[4rem] opacity-10 group-hover:opacity-30 transition duration-700 blur-sm"></div>
+            <div className="relative bg-[#050508]/60 border border-white/10 p-10 md:p-16 rounded-[4rem] overflow-hidden backdrop-blur-md">
+              
+              <div className="flex justify-between items-start mb-20">
+                 <div className="px-5 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full">
+                    <p className="text-[10px] font-black text-cyan-400 tracking-[0.2em] uppercase">Access Level: Admin</p>
+                 </div>
+                 <Shield size={24} className="text-zinc-800 group-hover:text-cyan-500 transition-colors duration-500" />
+              </div>
 
-          {/* Recharge XP Link */}
-          <Link href="/recharge" className="bg-cyan-500 p-8 rounded-[2.5rem] flex flex-col justify-between group hover:bg-cyan-400 transition-all shadow-xl text-black">
-            <ArrowUpRight className="mb-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" size={32} />
-            <div>
-              <p className="text-[10px] font-black text-black/60 uppercase tracking-widest mb-1">Get More Power</p>
-              <p className="text-4xl font-black italic">RECHARGE</p>
-            </div>
-          </Link>
-        </div>
-
-        {/* Content Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Recent E-books (Knowledge Asset) */}
-          <div>
-            <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
-              <h2 className="text-xl font-black italic uppercase tracking-widest">Knowledge Assets</h2>
-              <Link href="/ebook" className="text-[10px] font-black text-cyan-500 uppercase hover:underline tracking-widest">E-Book Store</Link>
-            </div>
-            <div className="space-y-4">
-              {unlockedEbooks.length > 0 ? unlockedEbooks.map((book) => (
-                <Link key={book.id} href={`/ebook/${book.id}`} className="flex items-center gap-6 p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/5 transition-all group">
-                  <div className="w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
-                    <img src={book.cover_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" alt="" />
-                  </div>
-                  <div className="flex-grow">
-                    <p className="font-black uppercase italic text-sm group-hover:text-cyan-500 transition-colors line-clamp-1">{book.title}</p>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase mt-1 tracking-tighter">Asset Unlocked</p>
-                  </div>
-                  <ArrowUpRight size={20} className="text-slate-700 group-hover:text-cyan-500 transition-colors" />
-                </Link>
-              )) : (
-                <div className="py-10 border border-dashed border-white/5 rounded-2xl text-center">
-                  <p className="text-slate-600 italic text-[10px] font-black uppercase tracking-widest">No Knowledge Assets found.</p>
+              <div className="relative z-10">
+                <p className="text-[12px] font-black text-zinc-500 tracking-[0.7em] mb-8 uppercase italic">Neural Energy Balance</p>
+                <div className="flex flex-wrap items-baseline gap-6 mb-12">
+                  <span className="text-7xl md:text-9xl font-black italic tracking-tighter leading-none bg-gradient-to-b from-white via-white to-zinc-700 bg-clip-text text-transparent drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                    {(profile?.neural_energy || 0).toLocaleString()}
+                  </span>
+                  <span className="text-3xl font-black text-cyan-500 italic tracking-widest">XP</span>
                 </div>
-              )}
+                
+                <div className="space-y-4 max-w-xl">
+                  <div className="flex justify-between text-[11px] font-black tracking-[0.3em] uppercase text-zinc-500">
+                    <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div> System Stability</span>
+                    <span className="text-cyan-400">Online</span>
+                  </div>
+                  <div className="w-full h-[4px] bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 w-[94%] shadow-[0_0_15px_rgba(6,182,212,0.4)]"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Neural Academy */}
-          <div>
-            <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
-              <h2 className="text-xl font-black italic uppercase tracking-widest">Neural Academy</h2>
-              <Link href="/academy" className="text-[10px] font-black text-cyan-500 uppercase hover:underline tracking-widest">Learning Center</Link>
-            </div>
-            <div className="space-y-4">
-              {unlockedVideos.length > 0 ? unlockedVideos.map((video) => (
-                <Link key={video.id} href={`/academy/${video.id}`} className="flex items-center gap-6 p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/5 transition-all group">
-                  <div className="w-24 aspect-video rounded-lg overflow-hidden flex-shrink-0 bg-black/40 relative">
-                    <img src={video.thumbnail_url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt="" />
-                    <PlayCircle className="absolute inset-0 m-auto text-white/40 group-hover:text-cyan-500 transition-colors" size={24} />
-                  </div>
-                  <div className="flex-grow">
-                    <p className="font-black uppercase italic text-sm group-hover:text-cyan-500 transition-colors line-clamp-1">{video.title}</p>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase mt-1 tracking-tighter">Ready for Training</p>
-                  </div>
-                  <ArrowUpRight size={20} className="text-slate-700 group-hover:text-cyan-500 transition-colors" />
-                </Link>
-              )) : (
-                <div className="py-10 border border-dashed border-white/5 rounded-2xl text-center">
-                  <p className="text-slate-600 italic text-[10px] font-black uppercase tracking-widest">Academy courses pending...</p>
+          {/* Right Actions */}
+          <div className="space-y-8">
+            <Link href="/redeem" className="block group">
+              <div className="bg-white/[0.03] border border-white/10 p-10 rounded-[3rem] hover:bg-cyan-500 transition-all duration-500 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-150 transition-transform duration-700">
+                  <Zap size={80} className="text-white" />
                 </div>
-              )}
+                <div className="flex justify-between items-center mb-6 relative z-10">
+                  <div className="w-14 h-14 bg-cyan-500/20 rounded-2xl flex items-center justify-center text-cyan-400 group-hover:bg-black transition-all">
+                    <Zap size={28} />
+                  </div>
+                  <ChevronRight className="text-zinc-700 group-hover:text-black transition-all" />
+                </div>
+                <h4 className="text-2xl font-black italic uppercase group-hover:text-black transition-all relative z-10">Recharge</h4>
+                <p className="text-[10px] font-black text-zinc-500 mt-2 uppercase tracking-widest group-hover:text-black/60 transition-all relative z-10 italic">Protocol: Neural_Boost</p>
+              </div>
+            </Link>
+
+            <div className="bg-white/[0.01] border border-white/[0.05] p-10 rounded-[3rem] backdrop-blur-sm">
+              <h4 className="text-[10px] font-black text-zinc-600 tracking-[0.5em] mb-8 uppercase italic border-b border-white/5 pb-4">Operator Logs</h4>
+              <div className="space-y-5">
+                <div className="flex flex-col gap-1">
+                   <p className="text-[9px] font-black text-zinc-700 uppercase">Last Synchronization</p>
+                   <p className="text-[11px] font-bold text-zinc-400 italic">02/03/2026 - SUCCESS</p>
+                </div>
+                <div className="flex flex-col gap-1">
+                   <p className="text-[9px] font-black text-zinc-700 uppercase">Core Status</p>
+                   <p className="text-[11px] font-bold text-cyan-500/80 italic animate-pulse">ACTIVE_RESONANCE</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Branding Footer */}
-        <footer className="mt-24 pt-8 border-t border-white/5 text-center">
-          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-700 italic">
-            Aurelius Studio Intelligence • Developed By komsin
-          </p>
-        </footer>
-      </div>
+      </main>
     </div>
   );
 }
