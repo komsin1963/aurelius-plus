@@ -90,8 +90,9 @@ export default function ShopPage() {
                   {user ? "5,000 XP ALREADY INJECTED" : "SIGN UP FOR 5,000 XP BONUS"}
                </p>
                {!user && (
-                 <Link href="/register" className="inline-flex items-center gap-2 text-[10px] font-black text-black bg-cyan-400 px-6 py-3 rounded-full uppercase italic">
-                    Register Now <ArrowRight size={14} />
+                 /* 👇 เปลี่ยนจาก /register เป็น /auth-login เรียบร้อยครับ */
+                 <Link href="/auth-login" className="inline-flex items-center gap-2 text-[10px] font-black text-black bg-cyan-400 px-6 py-3 rounded-full uppercase italic">
+                    Sign Up Now <ArrowRight size={14} />
                  </Link>
                )}
             </div>

@@ -59,7 +59,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#020205] text-white font-sans selection:bg-cyan-500/30 overflow-x-hidden">
       
-      {/* --- 🚀 Ultra-Slim Glass Sidebar (แก้ปัญหาบังจอ) --- */}
+      {/* --- 🚀 Ultra-Slim Glass Sidebar (ไซด์บาร์แบบประหยัดพื้นที่) --- */}
       <aside className="fixed left-6 top-1/2 -translate-y-1/2 w-16 md:w-20 h-[60vh] bg-white/[0.02] border border-white/[0.08] backdrop-blur-3xl rounded-[3rem] flex flex-col items-center py-8 z-50 transition-all duration-500 hover:w-24 hover:bg-white/[0.05] group shadow-[0_0_50px_rgba(0,0,0,0.5)]">
         
         <div className="mb-10">
@@ -73,9 +73,9 @@ export default function DashboardPage() {
             <LayoutDashboard size={20} />
             <span className="absolute left-full ml-4 px-2 py-1 bg-cyan-500 text-black text-[10px] font-black rounded opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none uppercase italic">Overview</span>
           </Link>
-          <Link href="/redeem" className="p-3 rounded-2xl text-zinc-600 hover:text-white hover:bg-white/5 transition-all group/icon relative">
+          <Link href="/shop" className="p-3 rounded-2xl text-zinc-600 hover:text-white hover:bg-white/5 transition-all group/icon relative">
             <Zap size={20} />
-            <span className="absolute left-full ml-4 px-2 py-1 bg-white text-black text-[10px] font-black rounded opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none uppercase italic">Redeem</span>
+            <span className="absolute left-full ml-4 px-2 py-1 bg-white text-black text-[10px] font-black rounded opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none uppercase italic">Shop</span>
           </Link>
         </nav>
 
@@ -85,7 +85,7 @@ export default function DashboardPage() {
         </button>
       </aside>
 
-      {/* --- 🌊 Main Content (ขยับระยะขอบใหม่ให้อ่านง่ายขึ้น) --- */}
+      {/* --- 🌊 Main Content --- */}
       <main className="pl-28 md:pl-40 lg:pl-52 min-h-screen p-8 md:p-12 lg:p-20 relative">
         
         {/* Background Ambient Glow */}
@@ -150,7 +150,8 @@ export default function DashboardPage() {
 
           {/* Right Actions */}
           <div className="space-y-8">
-            <Link href="/redeem" className="block group">
+            {/* 👇 ลิงก์ไปหน้า Shop เรียบร้อย */}
+            <Link href="/shop" className="block group">
               <div className="bg-white/[0.03] border border-white/10 p-10 rounded-[3rem] hover:bg-cyan-500 transition-all duration-500 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-150 transition-transform duration-700">
                   <Zap size={80} className="text-white" />

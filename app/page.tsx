@@ -369,10 +369,10 @@ export default function AureliusCentralHub() {
                 <span className="text-[7px] font-black tracking-[0.4em] text-zinc-700 mt-2 uppercase italic">By komsin.com</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                <a href="https://x.com/@AureliusX" className="w-9 h-9 bg-zinc-900 border border-white/5 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:border-cyan-500/50 transition-all"><Twitter size={14} /></a>
-                <a href="https://instagram.com/AureliusX" className="w-9 h-9 bg-zinc-900 border border-white/5 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:border-pink-500/50 transition-all"><Instagram size={14} /></a>
-                <a href="https://tiktok.com/@AureliusX" className="w-9 h-9 bg-zinc-900 border border-white/5 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:border-white transition-all"><Music2 size={14} /></a>
-                <a href="https://pinterest.com/AureliusX" className="w-9 h-9 bg-zinc-900 border border-white/5 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:border-red-500/50 transition-all"><Bookmark size={14} /></a>
+                <a href="#" className="w-9 h-9 bg-zinc-900 border border-white/5 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:border-cyan-500/50 transition-all"><Twitter size={14} /></a>
+                <a href="#" className="w-9 h-9 bg-zinc-900 border border-white/5 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:border-pink-500/50 transition-all"><Instagram size={14} /></a>
+                <a href="https://tiktok.com/@bittoken7" className="w-9 h-9 bg-zinc-900 border border-white/5 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:border-white transition-all"><Music2 size={14} /></a>
+                <a href="#" className="w-9 h-9 bg-zinc-900 border border-white/5 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:border-red-500/50 transition-all"><Bookmark size={14} /></a>
                 <a href="/support" className="px-4 h-9 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex items-center justify-center text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all gap-2 text-[8px] font-black uppercase italic"><HeartHandshake size={14} /> Support</a>
               </div>
             </div>
@@ -384,7 +384,10 @@ export default function AureliusCentralHub() {
                 <li><Link href="/about" className="hover:text-white">About</Link></li>
                 <li><Link href="/updates" className="hover:text-white">Fearures</Link></li>
                 <li><Link href="/studio-pod/mygallery" className="hover:text-white">Gallery</Link></li>
-                <li><Link href="/studio-pod/print-partner" className="hover:text-white">Thai print-partner</Link></li>
+              
+                <li><Link href="/dashboard" className="hover:text-white">Profile</Link></li>
+                
+                
                 
               </ul>
             </div>
@@ -396,6 +399,7 @@ export default function AureliusCentralHub() {
                 <li><a href="https://printful.com" target="_blank" className="hover:text-white flex items-center gap-2">Printful Hub <ExternalLink size={8} /></a></li>
                 <li><a href="https://redbubble.com" target="_blank" className="hover:text-white flex items-center gap-2">redbubble <ExternalLink size={8} /></a></li>
                 <li><a href="https://printify.com" target="_blank" className="hover:text-cyan-400 flex items-center gap-2">printify <ExternalLink size={8} /></a></li>
+                <li><Link href="/studio-pod/print-partner" className="hover:text-white">Thai print-partner</Link></li>
               </ul>
             </div>
 
@@ -406,6 +410,7 @@ export default function AureliusCentralHub() {
                 <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
                 <li><Link href="/faq" className="hover:text-white">faq</Link></li>
                 <li><Link href="/redeem" className="hover:text-white">redeem</Link></li>
+                <Link href="/shop" className="text-cyan-500 hover:text-white transition-colors">Refill XP</Link>
               </ul>
             </div>
           </div>

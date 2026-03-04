@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-// --- 🛠️ 8 TOOLS DATA (เพิ่ม Reduce Color ที่ ui-09) ---
+// --- 🛠️ 9 TOOLS DATA (เพิ่ม Reduce Color ที่ ui-09) ---
 const studioToolsGuide = [
   {
     id: "reduce-color",
